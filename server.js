@@ -25,16 +25,21 @@ client.connect((err) => {
 
 const date = new Date();
 
+function makeCode(length) {
+  var result           = '';
+  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  var charactersLength = characters.length;
+  for ( var i = 0; i < length; i++ ) {
+     result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
+
 app.put('/coupon', (req, res) => {
-    db.collection('coupons').find({}).toArray((err,coupons) => {
-      if (err) {
-        console.log(err);
-        res.sendStatus(500);
-        return;
-      }
+      let code=makeCode(8);
 
       let coupon={
-        code: "cc-"+coupons.length,
+        code: code,
         date : date,
         isRedeem : false
       }
@@ -49,7 +54,6 @@ app.put('/coupon', (req, res) => {
         res.status(201).json(coupon.ops[0]);
       });
 
-    })
 });
 
 app.get('/coupon', (req, res) => {
@@ -64,17 +68,21 @@ app.get('/coupon', (req, res) => {
 });
 
 app.get('/coupon/:id', (req, res) => {
-  db.collection('coupons').findOne({
-    _id: ObjectId(req.params.id)
-  }, (err,user)=>{
-    if (err){
-      console.log(err);
-      res.sendStatus(500);
-      return;
-    }
-    res.json(user);
-  })
-   
+  const couponId = ObjectId(req.params.id);
+	db.collection('coupons').findOne({
+		_id: couponId
+	}, (err, coupon) => {
+		if(err) {
+			console.log(err);
+			res.sendStatus(500);
+			return;
+    }    
+		if(!coupon) {
+			res.sendStatus(404);
+			return;
+    }    
+		res.json(coupon);      
+  });     
 });
 
 app.post('/coupon/:id', (req, res) => {
